@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,35 +50,36 @@ public class Module extends ReactContextBaseJavaModule {
             // Add your data
 
 
-
             List<UsageStats> stats = UStats.getUsageStatsList(reactContext);
             System.out.println(stats.get(0));
 
             List<Map<String, Long>> result = new ArrayList<>();
 
 
-            URL url = new URL(String.format("/asd/%s", "1"));
-//            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-//            conn.setRequestMethod("POST");
-//            conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
-//            conn.setRequestProperty("Accept","application/json");
-//            conn.setDoOutput(true);
-//            conn.setDoInput(true);
+            URL url = new URL(String.format("http://10.0.0.6:8000/upsert-activity/%s/", text));
+            System.out.println(url);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
 
             List<JSONObject> jsonParam = new ArrayList<>();
 
-            for (UsageStats obj: stats) {
+            Map<String, Object> appsMap = null;
+            for (UsageStats obj : stats) {
                 if (
                         obj.getPackageName().contains("maps")
-                    ||  obj.getPackageName().contains("web")
-                    ||  obj.getPackageName().contains("instagram")
-                    ||  obj.getPackageName().contains("facebook")
+                                || obj.getPackageName().contains("web")
+                                || obj.getPackageName().contains("instagram")
+                                || obj.getPackageName().contains("facebook")
 
                 ) {
                     result.add(
-                        new HashMap<String, Long>() {{
-                            put(obj.getPackageName(), obj.getTotalTimeInForeground());
-                        }});
+                            new HashMap<String, Long>() {{
+                                put(obj.getPackageName(), obj.getTotalTimeInForeground());
+                            }});
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         obj.getTotalTimeForegroundServiceUsed();
@@ -90,36 +92,40 @@ public class Module extends ReactContextBaseJavaModule {
 
                     jsonParam.add(jsonObject);
                 }
+
+                appsMap = new HashMap<>();
+                appsMap.put("\"apps\"", jsonParam);
             }
 
-            System.out.println(jsonParam.get(0).get("app_name"));
 
-            Log.i("JSON", jsonParam.toString());
-//            DataOutputStream os = new DataOutputStream(conn.getOutputStream());
-//
+            DataOutputStream os = new DataOutputStream(conn.getOutputStream());
+            //os.writeBytes(URLEncoder.encode(jsonParam.toString(), "UTF-8"));
+
+            String request = appsMap.toString().replace("=", ":");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                System.out.println(request);
+            }
+            os.writeBytes(request);
+
 //            os.writeBytes(jsonParam.toString());
-//
-//            os.flush();
-//            os.close();
-//
-//            Log.i("STATUS", String.valueOf(conn.getResponseCode()));
-//            Log.i("MSG" , conn.getResponseMessage());
-//
-//            conn.disconnect();
+
+            os.flush();
+            os.close();
+
+            Log.i("STATUS", String.valueOf(conn.getResponseCode()));
+            Log.i("MSG", conn.getResponseMessage());
+
+            conn.disconnect();
 
         } catch (JSONException e) {
             throw new RuntimeException(e);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
+        } catch (ProtocolException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-
-
-//        ReactApplicationContext context = getReactApplicationContext();
-//        Intent intent = new Intent(context, MainActivity.class);
-//        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//        context.startActivity(intent);
-//
-//        System.out.println(text);
 
         return text;
     }

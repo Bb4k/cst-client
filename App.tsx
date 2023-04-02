@@ -68,23 +68,16 @@ function App(): JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  
-  
-  const x = HelloWorld.sayHi("def")
-  
-  console.log(x)
+  var x = ""
   const createThreeButtonAlert = () =>
   Alert.alert('Alert Title', x, [
-    {
-      text: HelloWorld.sayHi('yes'),
-      onPress: () => console.log(x),
-    },
+  
     {
       text: 'Cancel',
       onPress: () => console.log('Cancel Pressed'),
       style: 'cancel',
     },
-    {text: 'OK', onPress: () => console.log(HelloWorld.showMessage('yes'))},
+    {text: 'OK', onPress: () => console.log(HelloWorld.sayHi('1'))},
   ]);
 
   useEffect(() => {
@@ -114,11 +107,6 @@ function App(): JSX.Element {
             padding: 10,
           }}
           onPress={() => {
-            
-            console.log(HelloWorld.sayHi("text"))
-            console.log(HelloWorld.showMessage("text"))
-            var x = HelloWorld.showMessage("text")
-            console.log(x)
             createThreeButtonAlert();
           }}>
             <Text style={{ color: 'white' }}>Buton</Text>
